@@ -8155,13 +8155,13 @@ button.picker__today:focus, button.picker__clear:focus, button.picker__close:foc
 /* This moves the map*/
 #map-container {
     position: relative;
-    margin-top: 1cm;
+    margin-top: 25px;
 
 }
 /*This moves the data*/
 #data-container{
     position: relative;
-    margin-top: 1cm;
+    margin-top: 20px;
 
 }
 
