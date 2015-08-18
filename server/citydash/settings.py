@@ -15,6 +15,10 @@ import os
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+# Determine if the app is in production mode by examining
+APP_MODE=os.environ.get("DJANGO_MODE", "development").lower()
+IS_PRODUCTION=(APP_MODE == "production")
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
@@ -37,7 +41,10 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django.contrib.gis'
+    'django.contrib.gis',
+    'parcel',
+    'proposal',
+    'shared'
 )
 
 MIDDLEWARE_CLASSES = (
@@ -56,7 +63,7 @@ ROOT_URLCONF = 'citydash.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': ["templates"],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -78,9 +85,9 @@ WSGI_APPLICATION = 'citydash.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
+        'HOST': '',
         'NAME': 'citydash',
-        'USER': 'postgres',
-        'PASSWORD': 'postgres'
+        'USER': 'citydash'
     }
 }
 
@@ -102,4 +109,10 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
-STATIC_URL = '/static/'
+STATIC_URL = '/client/'
+
+if not IS_PRODUCTION:
+    STATIC_ROOT = '/client'
+
+# Celery
+BROKER_URL = "redis://"
