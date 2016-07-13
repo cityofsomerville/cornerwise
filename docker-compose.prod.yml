@@ -2,11 +2,24 @@ version: "2"
 
 services:
   cornerwise:
+    image: bdsand/cornerwise:latest
     ports:
       - "3000:3000"
     environment:
       APP_PORT: "3000"
       APP_MODE: "production"
   celery:
+    image: bdsand/cornerwise:latest
+    depends_on:
+      - cornerwise
+    env_file:
+      - ./docker-support/common.env
     environment:
       APP_MODE: "production"
+      IS_CELERY: "1"
+    links:
+      - postgres
+      - redis
+    volumes:
+      - media:/media
+    command: bash /app/celery_start.sh

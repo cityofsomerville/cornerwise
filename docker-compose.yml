@@ -1,12 +1,8 @@
-version: '2'
+version: "2"
 
 services:
   cornerwise:
-    build: .
-    image: cornerwise
-    depends_on:
-      - postgres
-      - redis
+    image: bdsand/cornerwise:latest
     env_file:
       - ./docker-support/common.env
     links:
@@ -16,22 +12,7 @@ services:
     volumes:
       - runinfo:/runinfo
       - media:/media
-  celery:
-    image: cornerwise
-    depends_on:
-      - cornerwise
-      - postgres
-      - redis
-    env_file:
-      - ./docker-support/common.env
-    environment:
-      IS_CELERY: "1"
-    links:
-      - postgres
-      - redis
-    volumes:
-      - media:/media
-    command: bash /app/celery_start.sh
+    working_dir: /app
   postgres:
     image: mdillon/postgis:9.4
     volumes:

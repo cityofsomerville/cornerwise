@@ -23,7 +23,7 @@ APP_MODE = os.environ.get("APP_MODE", "development").lower()
 IS_PRODUCTION = (APP_MODE == "production")
 IS_CELERY = os.environ.get("IS_CELERY") == "1"
 
-REDIS_HOST = os.environ.get("REDIS_HOST", "redis://")
+REDIS_HOST = "redis://" + os.environ.get("REDIS_HOST", "")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
@@ -34,11 +34,9 @@ SECRET_KEY = os.environ.get("DJANGO_SECRET",
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = not IS_PRODUCTION and not IS_CELERY
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ["*"]
 
 # Application definition
-
 INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.auth',
@@ -48,7 +46,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.gis',
-    'djcelery',
+    "djcelery",
     'parcel',
     'proposal.ProposalConfig',
     'project.ProjectConfig',
@@ -88,8 +86,8 @@ TEMPLATES = [
 WSGI_APPLICATION = 'cornerwise.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/1.8/ref/settings/#databases
+#####################
+# Database and Cache
 
 POSTGRES_HOST = os.environ.get("POSTGRES_HOST", "")
 DATABASES = {
@@ -133,8 +131,8 @@ SERVER_DOMAIN = "cornerwise.org"
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
-STATIC_URL = 'static/'
-MEDIA_URL = 'media/'
+STATIC_URL = "static/"
+MEDIA_URL = "media/"
 
 if not IS_PRODUCTION:
     STATIC_ROOT = '/client/'
@@ -145,10 +143,15 @@ else:
 
 DOC_ROOT = os.path.join(MEDIA_ROOT, "doc")
 
-BROKER_URL = "redis://" + REDIS_HOST
+#######################
+# Celery configuration
+BROKER_URL = REDIS_HOST
+
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
 
 # Persist task results to the database
-CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
+CELERY_RESULT_BACKEND = "djcelery.backends.database:DatabaseBackend"
 
 CELERYBEAT_SCHEDULE = {
     "scrape-proposals": {
@@ -166,6 +169,16 @@ CELERYBEAT_SCHEDULE = {
 
 CELERYD_TASK_SOFT_TIME_LIMIT = 60
 
+###########
+# Messages
+from django.contrib.messages import constants as messages
+MESSAGE_TAGS = {
+    messages.ERROR: "danger"
+}
+
+###############################
+# Cornerwise-specific settings
+
 GEO_BOUNDS = [42.371861543730496, -71.13338470458984,  # northwest
               42.40393908425197, -71.0679817199707]    # southeast
 
@@ -177,7 +190,7 @@ GEO_REGION = "Somerville, MA"
 GEOCODER = "arcgis"
 
 # Email address and name for emails:
-EMAIL_ADDRESS = "Cornerwise <cornerwise@somervillema.gov>"
+EMAIL_ADDRESS = "Cornerwise <cornerwise@cornerwise.org>"
 
 AUTHENTICATION_BACKENDS = ["user.auth.TokenBackend"]
 

@@ -4,6 +4,7 @@
 pip install -q -r /support/requirements.txt
 
 cd $(dirname "${BASH_SOURCE[0]}")
+mkdir -p logs
 
 if [ -z "$APP_ROOT" ]; then
     export APP_ROOT=$(pwd)
@@ -18,7 +19,7 @@ fi
 trial_count=0
 while ! timeout 1 bash -c "echo > /dev/tcp/$POSTGRES_HOST/5432" 2>/dev/null; do
     trial_count=$((trial_count+1))
-    if ((trial_count == 10)); then
+    if ((trial_count == 12)); then
         echo "Postgres took too long to start."
         exit 1
     fi
@@ -34,5 +35,19 @@ $PYTHON_BIN $APP_ROOT/manage.py migrate
 if [ "$APP_MODE" = "production" ]; then
     gunicorn -b "0.0.0.0:$APP_PORT" cornerwise.wsgi
 else
-    $PYTHON_BIN $APP_ROOT/manage.py runserver 0.0.0.0:$APP_PORT
+    export C_FORCE_ROOT=1
+
+    if ((CELERY_MONITOR)); then
+        celery_opts="-E"
+    fi
+
+    rm /tmp/*.pid
+
+    $PYTHON_BIN manage.py celery -A $APP_NAME beat \
+                --pidfile=/tmp/celerybeat.pid &
+    $PYTHON_BIN manage.py celery -A $APP_NAME worker --loglevel=INFO \
+                --pidfile=/tmp/celery.pid \
+                --autoscale=$CELERY_MAX_WORKERS,$CELERY_MIN_WORKERS \
+                $celery_opts &
+    $PYTHON_BIN manage.py runserver 0.0.0.0:$APP_PORT
 fi

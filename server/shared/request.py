@@ -1,6 +1,7 @@
+from django.contrib import messages
 from django.core.serializers.json import DjangoJSONEncoder
 from django.http import JsonResponse, HttpResponse
-from django.shortcuts import render_to_response
+from django.shortcuts import redirect, render_to_response
 
 import logging
 import json
@@ -10,17 +11,19 @@ logger = logging.getLogger("logger")
 
 
 class ErrorResponse(Exception):
-    def __init__(self, message, data=None, status=401, err=None):
+    def __init__(self, message, data=None, status=401, err=None,
+                 redirect_back=None):
         super(Exception, self).__init__(self, message)
         self.data = {"error": message}
         if data:
             self.data.update(data)
         self.status = status
         self.exception = err
+        self.redirect_back = redirect_back
 
 
 def make_response(template=None, error_template="error.djhtml",
-                  shared_context=None):
+                  shared_context=None, redirect_back=False):
     """
     View decorator
 
@@ -32,6 +35,7 @@ def make_response(template=None, error_template="error.djhtml",
         def wrapped_view(req, *args, **kwargs):
             use_template = template
             status = 200
+            should_redirect_back = redirect_back
             try:
                 data = view(req, *args, **kwargs)
                 if shared_context:
@@ -40,6 +44,8 @@ def make_response(template=None, error_template="error.djhtml",
                 data = err.data
                 use_template = error_template
                 status = err.status
+                should_redirect_back = err.redirect_back
+
                 # render error template or return JSON with proper error
                 # code
 
@@ -57,12 +63,22 @@ def make_response(template=None, error_template="error.djhtml",
             accepts = req.META["HTTP_ACCEPT"]
 
             if not use_template \
-               or re.search(r"application/json", accepts):
+               or re.search(r"application/json", accepts) \
+               or req.GET.get("format", "").lower() == "json":
                 response = JsonResponse(data, status=status)
                 # TODO: We may (or may not!) want to be more restrictive
                 # in the future:
                 response["Access-Control-Allow-Origin"] = "*"
                 return response
+
+            if should_redirect_back:
+                back_url = req.META["HTTP_REFERER"]
+                if "error" in data:
+                    messages.error(req, data["error"])
+                    return redirect(back_url or "/")
+                elif "message" in data:
+                    messages.success(req, data["message"])
+                    return redirect(back_url or "/")
 
             return render_to_response(use_template, data, status=status)
 
