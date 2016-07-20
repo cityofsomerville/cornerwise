@@ -4,7 +4,6 @@ from django.conf import settings
 class Layer(models.Model):
     source = models.CharField(max_length=128,
                               help_text="The source of the layer data.")
-    layer_id = models.CharField(max_length=64)
     icon = models.CharField(max_length=64)
     icon_credit = models.CharField(max_lenth=128)
     region_name = models.CharField(max_Length=128,
