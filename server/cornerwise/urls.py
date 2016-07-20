@@ -33,6 +33,7 @@ urlpatterns = [
     url(r'^proposal/', include(proposal_urls)),
     url(r"^doc/", include(doc_urls)),
     url(r"^user/", include(user_urls)),
+    url(r"^layers/", inclue(layers_urls)),
     url(r"^$", index),
 
     url(r"^" + settings.MEDIA_URL + "(?P<path>.*)$",

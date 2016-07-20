@@ -19,8 +19,6 @@ from .models import Layer
 def layers_json(req):
     regions = req.GET.getlist("region")
     layers = Layer.objects.filter(region_name__in=regions)
-    mdict = model_to_dict(layers)
-
-    return HttpResponse(mdict)
+    mlist = [model_to_dict(l) for l in layers]
     
-    
+    return HttpResponse(json.dumps(mlist, sort_keys=True, indent=4))
