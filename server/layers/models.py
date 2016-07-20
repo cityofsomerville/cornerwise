@@ -1,7 +1,7 @@
 from django.db import models
 from django.conf import settings
 
-class Layers(models.Model):
+class Layer(models.Model):
     source = models.CharField(max_length=128,
                               help_text="The source of the layer data.")
     layer_id = models.CharField(max_length=64)
